@@ -1,0 +1,15 @@
+doctype
+html
+  include ./head.jade
+  div.container
+
+    if (error)
+      script.
+        alert("DB was not created\nRestart server")
+    if (restart)
+      script.
+        alert("Server restart successfull")
+  div.container
+    div.col-lg-12
+      each info in data
+        p= info        

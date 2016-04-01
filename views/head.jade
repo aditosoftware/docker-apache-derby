@@ -1,0 +1,27 @@
+doctype
+html
+  head
+    title DB Control
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/css/custom.css')
+    link(rel='stylesheet', href='/css/normalize.css')
+    script(src='/javascripts/app.js')
+  body
+   nav.navbar.navbar-default(role="navigation")
+      .container-fluid
+        .navbar-header
+        button(type='button', class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false")
+          span(class="sr-only") Toggle navigation
+          span(class="icon-bar")
+          span(class="icon-bar")
+          span(class="icon-bar")
+        .navbar-brand(href="#") Derby control
+        .collapse.navbar-collapse(id="bs-example-navbar-collapse-1")    
+          ul.nav.navbar-nav
+            li
+              a(href='/') DBs
+            li  
+              a(href= '/create') Create
+            li
+              a(href='/Log') Log
+          button(class="btn btn-primary navbar-btn", onclick='restartSrv()') Restart server
