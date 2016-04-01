@@ -6,4 +6,4 @@ The dbs are stored in /dbs folder. We have also created a WebGui, you can access
 ![derby-gui](/screenshot/derby.PNG)
 
 ## Start
-    sudo docker run -d -p 1527:1527 -p 5000:5000 -v dbs:/dbs --name derby -t adito/apache-derby
+    sudo docker run -d -p 1527:1527 -p 5000:5000 -v /dbs:/dbs --name derby -t adito/apache-derby
