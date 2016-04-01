@@ -12,7 +12,7 @@ RUN \
 	apt-get install -y openjdk-7-jre wget supervisor zip git curl &&\
 	curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash - &&\
 	apt-get install -y nodejs &&\
-	cd /webgui/ && /usr/bin/npm install &&\
+	cd /webgui/ && /usr/bin/npm install && cd / &&\
 	wget http://apache.mirror.iphh.net//db/derby/db-derby-10.12.1.1/db-derby-10.12.1.1-bin.tar.gz &&\
 	tar xzf db-derby-10.12.1.1-bin.tar.gz &&\
 	rm -Rf /db-derby-10.12.1.1-bin.tar.gz &&\
