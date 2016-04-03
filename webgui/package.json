@@ -1,13 +1,12 @@
 {
-  "name": "webex",
-  "version": "0.0.0",
-  "description": "example of node.js and jade and bootstrap",
+  "name": "apache derby webgui",
+  "version": "0.5.0",
+  "description": "WebGui for apache derby (nodejs,jade,bootstrap)",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js",
     "start": "node index.js"
   },
-  "author": "a.w",
+  "author": "a.walker",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.15.0",
