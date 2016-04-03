@@ -23,7 +23,7 @@ function post(path, params, method) {
 }
 
 function deleteDb(line) {
-    if (confirm('Are you sure you want to save this thing into the database?')) {
+    if (confirm('Do you really want to delete database?')) {
         var dbnameTd = document.getElementsByName("db" + line);
         var dbname = dbnameTd[0].innerText;
 
