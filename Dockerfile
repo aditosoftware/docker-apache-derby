@@ -1,5 +1,5 @@
 # Pull base image.
-FROM ubuntu
+FROM ubuntu:14.04.4
 
 ENV DERBY_INSTALL=/db-derby-10.12.1.1-bin
 ENV DERBY_HOME=/db-derby-10.12.1.1-bin
