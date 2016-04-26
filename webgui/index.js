@@ -16,14 +16,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var dbspath = '/dbs'
-var passfile = "/" + "passfile.json";
 
 app.listen(5000, function() {
     console.log("Live at Port 5000");
 });
 
 app.get('/', function(req, res) {
-
     if (req.query.upload) {
         var upload = true;
     } else {
@@ -110,8 +108,6 @@ app.post('/createdb', function(req, res) {
     var user = req.body.dbuser;
     var pass = req.body.dbpass;
 
-    var passObj = passfileHandle(req.body, 'add');
-
     //generate
     //echo "connect 'jdbc:derby://0.0.0.0:1527/dbtest;user=test;password=test;create=true';" | /db-derby-10.12.1.1-bin/bin/ij
     var cmd = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + db + ";user=" + user + ";password=" + pass + ";create=true\';\" | /db-derby-10.12.1.1-bin/bin/ij"
@@ -146,7 +142,6 @@ app.post('/deletedb', function(req, res) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
-            var passObj = passfileHandle(req.body, 'del');
             res.redirect('/');
         }
 
@@ -155,9 +150,7 @@ app.post('/deletedb', function(req, res) {
 
 app.post('/downloadDb', function(req, res) {
     var dbname = req.body.dbname;
-
-    var passfileObj = JSON.parse(fs.readFileSync(passfile, 'utf8'));
-    var passinfo = passfileObj[dbname];
+    
     //create command to make backup
     //echo "connect 'jdbc:derby://0.0.0.0:1527/adito;'; CALL SYSCS_UTIL.SYSCS_BACKUP_DATABASE('/dbbackup/adito');" | /db-derby-10.12.1.1-bin/bin/ij
 
@@ -232,7 +225,6 @@ app.post('/upload', multer({ dest: '/upload/' }).single('upl'), function(req, re
                                 console.log('exec error: ' + error);
                             } else {
                                 passBody.dbname = dbRenamed;
-                                var passObj = passfileHandle(passBody, 'add');
                                 console.log("move db successfull")
 
                                 var rmUpload = "rm -Rf /upload/*"
@@ -260,7 +252,6 @@ app.post('/upload', multer({ dest: '/upload/' }).single('upl'), function(req, re
                     if (error !== null) {
                         console.log('exec error: ' + error);
                     } else {
-                        var passObj = passfileHandle(passBody, 'add');
                         res.redirect('/?upload=true');
                         res.status(200).end();
                     }
@@ -302,49 +293,4 @@ function stripTrailingSlash(str) {
         return str.substr(0, str.length - 1);
     }
     return str;
-}
-
-function passfileHandle(bodyObj, command) {
-    var passfileObj = {};
-    var obj = bodyObj;
-
-    if (fs.existsSync(passfile)) {
-        console.log("passfile found(" + passfile + ")");
-        var passfileObj = JSON.parse(fs.readFileSync(passfile, 'utf8'));
-        if (command == 'add') {
-            passfileObj[obj.dbname] = obj;
-        }
-        if (command == 'del') {
-            delete passfileObj[obj.dbname];
-        }
-        fs.writeFile(passfile, JSON.stringify(passfileObj), function(err) {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log("JSON saved to " + passfile);
-            }
-        });
-
-    } else {
-        fs.writeFile(passfile, '', function(err) {
-            if (err) {
-                console.log(err);
-            } else {
-                if (command == 'add') {
-                    passfileObj[obj.dbname] = obj;
-                }
-                if (command == 'del') {
-                    delete passfileObj[obj.dbname];
-                }
-                fs.writeFile(passfile, JSON.stringify(passfileObj), function(err) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log("JSON saved to " + passfile);
-                    }
-                });
-
-            }
-        });
-    }
 }
