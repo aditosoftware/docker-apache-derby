@@ -2,16 +2,6 @@ doctype
 html
   include ./head.jade
   div.container
-
-    if (error)
-      script.
-        alert("DB was not created\nRestart server")
-    if (restart)
-      script.
-        alert("Server restart successfull")
-    if (upload)
-      script.
-        alert("Upload was successfull")
     div.table-responsive
       h4
         span(span class="label label-default") Info

@@ -23,14 +23,58 @@ function post(path, params, method) {
 }
 
 function deleteDb(line) {
-    if (confirm('Do you really want to delete database?')) {
-        var dbnameTd = document.getElementsByName("db" + line);
-        var dbname = dbnameTd[0].innerText;
 
-        post('/deletedb', { 'dbname': dbname })
-    } else {
-       window.location.href('/');
-    }
+    var cookiearr = document.cookie;
+    var idSplit = cookiearr.split("=");
+    var id = idSplit[1];
+
+    $.post('/delresponse', { 'id': id }).done(function (data) {
+        if (data == "admin") {
+            if (confirm('Do you really want to delete database?')) {
+                var dbnameTd = document.getElementsByName("db" + line);
+                var dbname = dbnameTd[0].innerText;
+                console.log(dbname);
+
+                post('/deletedb', { 'dbname': dbname, 'id': id })
+            } else {
+                window.location.href('/');
+            }
+        } else {
+            alert("Only users of the admin group can delete a database");
+        }
+    })
+
+}
+
+function logon(user, pass) {
+
+    $.post('/login', { 'user': user, "password": pass }).done(function (role) {
+        if (role == "admin") {
+            window.location.replace("/dbs");
+        } else {
+            var para = document.createElement("p");
+            var node = document.createTextNode("User is not a member of login or admin group");
+            para.appendChild(node);
+
+            var element = document.getElementById("loginform");
+            element.appendChild(para);
+            para.style.color = "red";
+        }
+    })
+
+}
+
+function logout() {
+
+    var cookiearr = document.cookie;
+    var idSplit = cookiearr.split("=");
+    var id = idSplit[1];
+
+    $.post('/delcookie', { 'id': id }).done(function (data) {
+      if(data){
+          window.location.replace('/');
+      }  
+    })
 
 }
 

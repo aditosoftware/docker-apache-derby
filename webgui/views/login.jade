@@ -1,0 +1,27 @@
+doctype
+html
+  head
+    title DB Control
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/css/custom.css')
+    link(rel='stylesheet', href='/css/normalize.css')
+    script(src='/javascripts/app.js')
+    script(src='/javascripts/jquery-3.0.0.min.js')
+div.container
+  div(class="row",id="pwd-container")
+  .col-md-4
+  .col-md-4
+    section.login-form(id="loginform")
+      h3 Derby DB Login
+      form(id="flogon", name="login", role="login")
+        input(type="text", name="user", placeholder="AD User", class="form-control input-lg", id="user")
+        input(type="password", class="form-control input-lg", id="pass", placeholder="AD Password", required="", name="password")
+        button(type="submit", name="blogon", class="btn btn-lg btn-primary btn-block", id="blogon") Login
+script(type="text/javascript").
+  $("#flogon").submit(function(e){
+      e.preventDefault();
+      var user = document.getElementById("user").value;
+      var pass = document.getElementById("pass").value;
+
+      logon(user, pass);
+  })
