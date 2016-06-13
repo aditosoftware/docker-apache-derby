@@ -11,14 +11,25 @@ var cookieParser = require('cookie-parser')
 
 var whitelist = [];
 
+
+var adauthread = process.env.adauth;
 var adname = process.env.adname;
 var baseDN = process.env.baseDN;
 var showUser = process.env.showUser;
 var showPass = process.env.showPass;
-var adminGroupTemp = process.env.AdminGroup;
+var adminGroupTemp = process.env.adminGroup;
 var adminGroup = adminGroupTemp.split(",");
-var loginGroupArr = process.env.LoginGroup;
+var loginGroupArr = process.env.loginGroup;
 var loginGroup = loginGroupArr.split(",");
+
+if (adauthread == "true" || adauthread == "1") {
+    console.log("AD Auth");
+    adauth = true;
+} else {
+    console.log("AD Auth not set: " + adauthread);
+    adauth = false;
+}
+
 
 //"icinga2@aditosoftware.local"
 //"I2ci5naga2a2015"
@@ -40,73 +51,81 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-var dbspath = '.'
+var dbspath = '/dbs'
 
 function checkgroup(user, pass, callback) {
 
-    var username = user + "@" + adname;
+    if (adauth) {
+        var username = user + "@" + adname;
 
-    ad.authenticate(username, pass, function (err, auth) {
-        if (err) {
-            console.log('ERROR: ' + JSON.stringify(err));
-            return callback("none");
-        }
+        ad.authenticate(username, pass, function (err, auth) {
+            if (err) {
+                console.log('ERROR: ' + JSON.stringify(err));
+                return callback("none");
+            }
 
-        if (auth) {
-            console.log('Authenticated!');
-            ad.getGroupMembershipForUser(username, function (err, groups) {
-                if (err) {
-                    console.log('ERROR: ' + JSON.stringify(err));
-                    return;
-                }
-                if (!groups) {
-                    console.log('User: ' + username + ' not found.');
-                } else {
-                    //console.log(groups[0].dn.length);
+            if (auth) {
+                console.log('Authenticated!');
+                ad.getGroupMembershipForUser(username, function (err, groups) {
+                    if (err) {
+                        console.log('ERROR: ' + JSON.stringify(err));
+                        return;
+                    }
+                    if (!groups) {
+                        console.log('User: ' + username + ' not found.');
+                    } else {
+                        //console.log(groups[0].dn.length);
 
-                    for (var i = 0; i < groups.length; i++) {
-                        var dnSplit = groups[i].dn;
-                        var groupSplit = dnSplit.split(",");
-                        var groupName = groupSplit[0].replace("CN=", "");
-                        //console.log(groupName);
+                        for (var i = 0; i < groups.length; i++) {
+                            var dnSplit = groups[i].dn;
+                            var groupSplit = dnSplit.split(",");
+                            var groupName = groupSplit[0].replace("CN=", "");
+                            //console.log(groupName);
 
-                        for (var y = 0; y < adminGroup.length; y++) {
-                            if (groupName == adminGroup[y]) {
-                                return callback("admin");
-                                break;
+                            for (var y = 0; y < adminGroup.length; y++) {
+                                if (groupName == adminGroup[y]) {
+                                    return callback("admin");
+                                    break;
+                                }
                             }
-                        }
-                        for (var x = 0; x < loginGroup.length; x++) {
-                            if (groupName == loginGroup[x]) {
-                                return callback("user");
-                                break;
+                            for (var x = 0; x < loginGroup.length; x++) {
+                                if (groupName == loginGroup[x]) {
+                                    return callback("user");
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
 
-        }
-        else {
-            return callback("none");
-        }
-    });
+            }
+            else {
+                return callback("none");
+            }
+        });
+    } else {
+        return callback("admin");
+    }
 }
 
 function checklogin(array, hash, callback) {
 
-    if (hash !== null && hash !== undefined && array.length > 0) {
+    if (adauth) {
+        if (hash !== null && hash !== undefined && array.length > 0) {
 
-        for (var i = 0; i < array.length; i++) {
+            for (var i = 0; i < array.length; i++) {
 
-            if (array[i].hash === hash) {
-                return callback(true, array[i].access);
+                if (array[i].hash === hash) {
+                    return callback(true, array[i].access);
+                }
             }
-        }
-        return callback(false);
+            return callback(false);
 
+        } else {
+            return callback(false);
+        }
     } else {
-        return callback(false);
+        return callback("admin");
     }
 }
 
@@ -152,24 +171,33 @@ app.get('/dbs', function (req, res) {
 
 app.get('/', function (req, res) {
 
-    //console.log('Cookies: ', req.cookies)
-
     if (req.query.ngroup) {
         var ngroup = true;
     } else {
         var ngroup = false;
     }
 
-    checklogin(whitelist, req.cookies._id, function (stat, role) {
-        console.log(stat);
-        if (stat) {
-            res.redirect('/dbs');
-        } else {
-            res.render('login', {
-                ngroup: ngroup
-            })
-        }
-    })
+    if (req.query.upload) {
+        var upload = true;
+    } else {
+        var upload = false;
+    }
+
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            if (stat) {
+                res.redirect('/dbs');
+            } else {
+                res.render('login', {
+                    ngroup: ngroup,
+                    upload: upload
+                })
+            }
+        })
+    } else {
+        res.redirect("/dbs");
+    }
+
 })
 
 app.get('/create', function (req, res) {
@@ -218,16 +246,20 @@ app.get('/log', function (req, res) {
 });
 
 app.post('/delresponse', multer({ dest: '/delresponse' }).single('delresponse'), function (req, res) {
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            if (stat) {
+                res.send(role);
+            } else {
+                res.render('login', {
+                    ngroup: "true"
+                })
+            }
+        })
+    } else {
+        res.send("admin");
+    }
 
-    checklogin(whitelist, req.cookies._id, function (stat, role) {
-        if (stat) {
-            res.send(role);
-        } else {
-            res.render('login', {
-                ngroup: "true"
-            })
-        }
-    })
 })
 
 
@@ -242,11 +274,9 @@ app.post('/deletedb', function (req, res) {
     var dbname = req.body.dbname;
     var id = req.body.id;
 
-    console.log(id);
-
     checklogin(whitelist, req.cookies._id, function (stat, role) {
         if (stat) {
-            console.log("found");
+
         } else {
             res.render('login', {
                 ngroup: "true"
@@ -285,7 +315,7 @@ app.post('/login', multer({ dest: '/login' }).single('login'), function (req, re
                         "access": user
                     }
                     console.log(whitelist);
-                    res.send(user); 
+                    res.send(user);
                 } else {
                     whitelist.push({
                         hash: md5hash,
@@ -297,10 +327,243 @@ app.post('/login', multer({ dest: '/login' }).single('login'), function (req, re
             })
         } else {
             console.log(user);
-            //res.redirect('/?ngroup="true"');
             res.send("none");
         }
     })
+})
+
+app.post('/downloadDb', function (req, res) {
+    var dbname = req.body.dbname;
+
+    checklogin(whitelist, req.cookies._id, function (stat, role) {
+        if (stat) {
+            var startBackup = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + dbname + ';\'; CALL SYSCS_UTIL.SYSCS_BACKUP_DATABASE(/dbbackup/' + dbname + '\');\" | /db-derby-10.12.1.1-bin/bin/ij'
+            child = exec(startBackup, function (error, stdout, stderr) {
+                if (error !== null) {
+                    console.log('exec error: ' + error);
+                } else {
+                    var cmd = "cd " + dbspath + " && zip -r /dbbackup/" + dbname + ".zip " + dbname
+                    child = exec(cmd, function (error, stdout, stderr) {
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        } else {
+                            res.download("/dbbackup/" + dbname + ".zip", dbname + ".zip", function (err) {
+                                if (err) {
+                                    console.log(err);
+                                } else {
+                                    var cmdDel = "rm -Rf /dbbackup/" + dbname + ".zip && rm -Rf /" + dbname + ".json"
+                                    child = exec(cmdDel, function (error, stdout, stderr) {
+                                        if (error !== null) {
+                                            console.log('exec error: ' + error);
+                                        } else {
+                                            console.log("start download");
+                                        }
+
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } else {
+            res.render('login', {
+                ngroup: "true"
+            })
+        }
+    })
+
+})
+
+app.post('/restartSrv', function (req, res) {
+
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            if (stat) {
+
+                if (role !== "admin") {
+                    res.send("none")
+                } else {
+                    var cmd = "/db-derby-10.12.1.1-bin/bin/stopNetworkServer && supervisorctl -c /etc/supervisor.conf start derbydb";
+                    child = exec(cmd, function (error, stdout, stderr) {
+                        if (error !== null) {
+                            var response = {
+                                "error": true,
+                                "output": error.cmd + "\n" + stderr
+                            }
+                            res.send(response);
+                        } else {
+                            res.send("success");
+                        }
+                    });
+                }
+            } else {
+                res.render('login', {
+                    ngroup: "true"
+                })
+            }
+        })
+    } else {
+        var cmd = "/db-derby-10.12.1.1-bin/bin/stopNetworkServer && supervisorctl -c /etc/supervisor.conf start derbydb";
+        child = exec(cmd, function (error, stdout, stderr) {
+            if (error !== null) {
+                var response = {
+                    "error": true,
+                    "output": error.cmd + "\n" + stderr
+                }
+                res.send(response);
+            } else {
+                res.send("success");
+            }
+        });
+    }
+
+
+})
+
+app.post('/createdb', function (req, res) {
+
+    var dbname = req.body.db;
+    var dbuser = req.body.dbuser;
+    var dbpass = req.body.dbpass;
+
+    checklogin(whitelist, req.cookies._id, function (stat, role) {
+        if (stat) {
+            console.log(role);
+            if (role !== "admin") {
+                res.send("none")
+            } else {
+                var cmd = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + dbname + ";user=" + dbuser + ";password=" + dbpass + ";create=true\';\" | /db-derby-10.12.1.1-bin/bin/ij"
+                console.log(cmd);
+                child = exec(cmd, function (error, stdout, stderr) {
+                    if (error !== null) {
+                        var response = {
+                            "error": true,
+                            "output": error.cmd + "\n" + stderr
+                        }
+                        res.send(response);
+                    } else {
+
+                        fs.exists(dbspath + "/" + dbname, function (exists) {
+                            if (exists) {
+                                var response = {
+                                    "error": false,
+                                    "output": "DB was created"
+                                }
+                            } else {
+                                var response = {
+                                    "error": true,
+                                    "output": "DB was not created\nYou need restart server first"
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        } else {
+            res.render('login', {
+                ngroup: "true"
+            })
+        }
+    })
+})
+
+app.post('/uploaddb', multer({ dest: '/upload/' }).single('upl'), function (req, res) {
+
+    //console.log(req.file); //form files
+	/* example output:
+            { fieldname: 'upl',
+              originalname: 'grumpy.png',
+              encoding: '7bit',
+              mimetype: 'image/png',
+              destination: './uploads/',
+              filename: '436ec561793aa4dc475a88e84776b1b9',
+              path: 'uploads/436ec561793aa4dc475a88e84776b1b9',
+              size: 277056 }
+	 */
+
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            if (stat) {
+                var pathToFile = req.file.path;
+                var origname = req.file.origname;
+
+                var passBody = req.body;
+
+                var unZipDb = "unzip -l " + pathToFile + " | sed -n 4p | awk '{print $4;}'"
+                child = exec(unZipDb, function (error, pPath, stderr) {
+                    if (error !== null) {
+                        console.log('exec error: ' + error);
+                    } else {
+                        var dbnameZip = stripTrailingSlash(pPath.trim());
+                        var dbRenamed = stripTrailingSlash(pPath.trim()) + "_" + randomIntInc(1, 10000);
+                        if (fs.existsSync(dbspath + "/" + dbnameZip)) {
+                            console.log("db found.Rename");
+                            var unzipcom = "unzip " + pathToFile + " -d /tmp";
+                            child = exec(unzipcom, function (error, stdout, stderr) {
+                                if (error !== null) {
+                                    console.log('exec error: ' + error);
+                                } else {
+                                    var mvZip = "mv /tmp/" + dbnameZip + " " + dbspath + "/" + dbRenamed;
+                                    console.log(mvZip);
+                                    child = exec(mvZip, function (error, stdout, stderr) {
+                                        if (error !== null) {
+                                            console.log('exec error: ' + error);
+                                        } else {
+                                            passBody.dbname = dbRenamed;
+                                            console.log("move db successfull")
+
+                                            var rmUpload = "rm -Rf /upload/*"
+                                            child = exec(rmUpload, function (error, stdout, stderr) {
+                                                if (error !== null) {
+                                                    console.log('exec error: ' + error);
+                                                } else {
+                                                    console.log("Remove all from upload - ok");
+                                                    res.redirect('/?upload=true');
+                                                    res.status(200).end();
+                                                }
+
+                                            });
+                                        }
+
+                                    });
+                                }
+
+                            });
+                        } else {
+                            console.log("db not found.Create");
+                            passBody.dbname = dbRenamed;
+                            var unzipcom = "unzip " + pathToFile + " -d " + dbspath;
+                            child = exec(unzipcom, function (error, stdout, stderr) {
+                                if (error !== null) {
+                                    console.log('exec error: ' + error);
+                                } else {
+                                    res.redirect('/?upload=true');
+                                    res.status(200).end();
+                                }
+
+                            });
+                        }
+                    }
+
+                });
+            } else {
+                res.render('login', {
+                    ngroup: "true"
+                })
+            }
+        })
+    }
+});
+
+app.post('/logoutbutton', function (req, res) {
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            res.send(true);
+        })
+    } else {
+        res.send(false);
+    }
 })
 
 function randomIntInc(low, high) {

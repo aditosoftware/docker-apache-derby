@@ -25,4 +25,7 @@ html
             td
               button(class="btn btn-danger",onclick='deleteDb(' + i + ')',name="deleteDb" + i, title="test") delete
               |  
-              button(class="btn btn-primary",onclick='downloadDb(' + i + ')', ,name="download" + i) download(.zip)
+              button(class="btn btn-primary",onclick='downloadDb(' + i + ')',name="download" + i) download(.zip)
+if (upload)
+  script.
+    alert("Upload was successfull")

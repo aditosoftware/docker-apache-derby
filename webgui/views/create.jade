@@ -4,16 +4,16 @@ html
   div.container
     div.col-lg-12
       h1 Create new database
-      form(method="post", action="/createdb")
+      form(id="fcreate", name="create")
         div.form-group
           label(for="dbname") DB name 
-          input(for="dbname", class="form-control",type="text",name="dbname")
+          input(for="dbname", class="form-control",type="text",name="dbname", id="dbcreate")
         div.form-group
           label(for="dbuser") DB user
-          input(for="dbuser", class="form-control",type="text",name="dbuser")
+          input(for="dbuser", class="form-control",type="text",name="dbuser", id="createdbuser")
         div.form-group
           label(for="dbuser") DB password
-          input(for="dbuser", class="form-control",type="password",name="dbpass")
+          input(for="dbuser", class="form-control",type="password",name="dbpass", id="createdbpass")
           button(class="btn btn-primary btn-lg btn-block", type="submit") Create
     div.col-lg-12
       h1 Create from backup (.zip)
@@ -21,7 +21,7 @@ html
           span(span class="label label-default") Info
         p.
           If database with this name already exist, the uploaded database will be renamed to "database_XXXX"    
-      form(method="post",enctype="multipart/form-data",action="/upload",name="upl")
+      form(method="post",enctype="multipart/form-data",action="/uploaddb",name="upl")
         div.form-group
           label(for="dbuser") Existing db user
           input(for="dbuser", class="form-control",type="text",name="dbuser")
@@ -32,3 +32,13 @@ html
           label(for="upload") File Upload(*.zip)
           input(type="file", name="upl", class="file")
           button(class="btn btn-primary btn-lg btn-block", type="submit") Upload
+
+script(type="text/javascript").
+  $("#fcreate").submit(function(e){
+      e.preventDefault();
+      var dbname = document.getElementById("dbcreate").value;
+      var dbuser = document.getElementById("createdbuser").value;
+      var dbpass = document.getElementById("createdbpass").value;
+
+      createdb(dbname, dbuser, dbpass);
+  })
