@@ -136,7 +136,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (window.location.href.toString().split(window.location.host)[1] == "/dbs") {
                     document.getElementById("restartbutton").setAttribute("disabled", "disabled");
-                    document.getElementById("deletedb").setAttribute("disabled", "disabled");
+                    var buttons = document.getElementsByClassName("btn-danger");
+                    if(buttons.length > 0){
+                        for(var i = 0; i < buttons.length; i++){
+                            buttons[i].setAttribute("disabled", "disabled");
+                        }
+                    }
                 }
                 if (window.location.href.toString().split(window.location.host)[1] == "/create") {
                     document.getElementById("createDB").setAttribute("disabled", "disabled");
