@@ -7,35 +7,35 @@ The dbs are stored in /dbs folder. We have also created a WebGui, you can access
 ![derby-gui](/screenshot/derby.PNG)
 
 ## Start with Active Directory Auth
-    sudo docker run -d -p 5000:5000 -p 1527:1527 -e adauth="true" -e adname="example.local" -e baseDN="dc=example,dc=local" -e showUser="ADUser" -e showPass="ADUserPass" -e adminGroup="Schema-Admins,IT,etc" -e loginGroup="ADTest,Domains-User" -v /nodejs/docker-apache-derby-copie/webgui/:/webgui -v /dbs:/dbs --name derby -t adito/apache-derby
+    sudo docker run -d -p 5000:5000 -p 1527:1527 -e ADAUTH="true" -e ADNAME="example.local" -e BASEDN="dc=example,dc=local" -e SHOWUSER="ADUser" -e SHOWPASS="ADUserPass" -e ADMINGROUP="Schema-Admins,IT,etc" -e LOGINGROUP="ADTest,Domains-User" -v /nodejs/docker-apache-derby-copie/webgui/:/webgui -v /dbs:/dbs --name derby -t adito/apache-derby
     
 Enable Active Directory Auth
 
-    adauth="true/false" or adauth="/0"
+    ADAUTH="true/false" or adauth="/0"
     
 Active Directory name
 
-    adname="example.local"
+    ADNAME="example.local"
     
 Base DN
 
-    baseDN="dc=example,dc=local"
+    BASEDN="dc=example,dc=local"
     
 AD USer to show permission of login user (do not need admin permissions)
 
-    showUser="ADUser"
+    SHOWUSER="ADUser"
     
 Password for AD User
 
-    showPass="ADUserPass"
+    SHOWPASS="ADUserPass"
     
 Group with admin permissions, can delete/creat/upload/download dbs and restart server = all. You can have more then one group
 
-    adminGroup="Schema-Admins,IT"
+    ADMINGROUP="Schema-Admins,IT"
     
 Group with logon permission. This group can only download a database
 
-    loginGroup="Domain-User"
+    LOGINGROUP="Domain-User"
     
 
 ## Start without AD Auth

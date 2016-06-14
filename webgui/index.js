@@ -10,18 +10,19 @@ var ActiveDirectory = require('activedirectory');
 var cookieParser = require('cookie-parser')
 
 var whitelist = [];
-var adauthread = process.env.adauth;
+var adauthread = process.env.ADAUTH;
+
 
 if (adauthread == "true" || adauthread == "1") {
     console.log("AD Auth");
     adauth = true;
-    var adname = process.env.adname;
-    var baseDN = process.env.baseDN;
-    var showUser = process.env.showUser;
-    var showPass = process.env.showPass;
-    var adminGroupTemp = process.env.adminGroup;
+    var adname = process.env.ADNAME;
+    var baseDN = process.env.BASEDN;
+    var showUser = process.env.SHOWUSER;
+    var showPass = process.env.SHOWPASS;
+    var adminGroupTemp = process.env.ADMINGROUP;
     var adminGroup = adminGroupTemp.split(",");
-    var loginGroupArr = process.env.loginGroup;
+    var loginGroupArr = process.env.LOGINGROUP;
     var loginGroup = loginGroupArr.split(",");
 } else {
     console.log("AD Auth not set: " + adauthread);
