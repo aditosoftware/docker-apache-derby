@@ -92,13 +92,14 @@ function restartSrv() {
 
 function createdb(dbname, user, pass) {
     $.post("/createdb", { "db": dbname, "dbuser": user, "dbpass": pass }).done(function (data) {
-        console.log(data);
+        //console.log(data);
         if (data === "none") {
-            alert("Server cannot restart - insufficient permissions(only admin)");
+            alert("Database can not be created - insufficient permissions(only admin)");
         } else if (data.error == true) {
-            alert("Cannot create DB " + data.output);
+            alert("Database can not be created " + data.output);
         } else {
             alert("DB created successfull");
+            window.location.replace('/create');
         }
     })
 }
@@ -111,24 +112,42 @@ document.addEventListener('DOMContentLoaded', function () {
     $.post("/logoutbutton").done(function (data) {
 
         //button(class="btn btn navbar-btn navbar-right", onclick='logout()') Logout
-        if (data) {
-            var head = document.getElementById("navbar-1");
-            var btn = document.createElement("button")
-            var text = document.createTextNode("Logout");
-            btn.appendChild(text);
-            btn.onclick = function () {
-                var cookiearr = document.cookie;
-                var idSplit = cookiearr.split("=");
-                var id = idSplit[1];
+        if (data.user) {
+            if (window.location.href.toString().split(window.location.host)[1] !== "/") {
+                var head = document.getElementById("navbar-1");
+                var btn = document.createElement("button")
+                var text = document.createTextNode("Logout");
+                btn.appendChild(text);
+                btn.onclick = function () {
+                    var cookiearr = document.cookie;
+                    var idSplit = cookiearr.split("=");
+                    var id = idSplit[1];
 
-                $.post('/delcookie', { 'id': id }).done(function (data) {
-                    if (data) {
-                        window.location.replace('/');
-                    }
-                })
+                    $.post('/delcookie', { 'id': id }).done(function (data) {
+                        if (data) {
+                            window.location.replace('/');
+                        }
+                    })
+                }
+                btn.className += "btn navbar-btn navbar-right";
+                head.appendChild(btn);
             }
-            btn.className += "btn navbar-btn navbar-right";
-            head.appendChild(btn);
+            if (data.role !== "admin") {
+
+                if (window.location.href.toString().split(window.location.host)[1] == "/dbs") {
+                    document.getElementById("restartbutton").setAttribute("disabled", "disabled");
+                    document.getElementById("deletedb").setAttribute("disabled", "disabled");
+                }
+                if (window.location.href.toString().split(window.location.host)[1] == "/create") {
+                    document.getElementById("createDB").setAttribute("disabled", "disabled");
+                    document.getElementById("restartbutton").setAttribute("disabled", "disabled");
+                }
+                if (window.location.href.toString().split(window.location.host)[1] == "/create") {
+                    document.getElementById("uploaddb").setAttribute("disabled", "disabled");
+                    document.getElementById("restartbutton").setAttribute("disabled", "disabled");
+                }
+
+            }
         }
     })
 }, false);

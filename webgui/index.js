@@ -10,21 +10,19 @@ var ActiveDirectory = require('activedirectory');
 var cookieParser = require('cookie-parser')
 
 var whitelist = [];
-
-
 var adauthread = process.env.adauth;
-var adname = process.env.adname;
-var baseDN = process.env.baseDN;
-var showUser = process.env.showUser;
-var showPass = process.env.showPass;
-var adminGroupTemp = process.env.adminGroup;
-var adminGroup = adminGroupTemp.split(",");
-var loginGroupArr = process.env.loginGroup;
-var loginGroup = loginGroupArr.split(",");
 
 if (adauthread == "true" || adauthread == "1") {
     console.log("AD Auth");
     adauth = true;
+    var adname = process.env.adname;
+    var baseDN = process.env.baseDN;
+    var showUser = process.env.showUser;
+    var showPass = process.env.showPass;
+    var adminGroupTemp = process.env.adminGroup;
+    var adminGroup = adminGroupTemp.split(",");
+    var loginGroupArr = process.env.loginGroup;
+    var loginGroup = loginGroupArr.split(",");
 } else {
     console.log("AD Auth not set: " + adauthread);
     adauth = false;
@@ -427,45 +425,76 @@ app.post('/createdb', function (req, res) {
     var dbuser = req.body.dbuser;
     var dbpass = req.body.dbpass;
 
-    checklogin(whitelist, req.cookies._id, function (stat, role) {
-        if (stat) {
-            console.log(role);
-            if (role !== "admin") {
-                res.send("none")
+    if (adauth) {
+        checklogin(whitelist, req.cookies._id, function (stat, role) {
+            if (stat) {
+                console.log(role);
+                if (role !== "admin") {
+                    res.send("none")
+                } else {
+                    var cmd = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + dbname + ";user=" + dbuser + ";password=" + dbpass + ";create=true\';\" | /db-derby-10.12.1.1-bin/bin/ij"
+                    console.log(cmd);
+                    child = exec(cmd, function (error, stdout, stderr) {
+                        if (error !== null) {
+                            var response = {
+                                "error": true,
+                                "output": error.cmd + "\n" + stderr
+                            }
+                            res.send(response);
+                        } else {
+                            fs.exists(dbspath + "/" + dbname, function (exists) {
+                                if (exists) {
+                                    var response = {
+                                        "error": false,
+                                        "output": "DB was created"
+                                    }
+                                    res.send(response);
+                                } else {
+                                    var response = {
+                                        "error": true,
+                                        "output": "DB was not created\nYou need restart server first"
+                                    }
+                                    res.send(response);
+                                }
+                            });
+                        }
+                    });
+                }
             } else {
-                var cmd = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + dbname + ";user=" + dbuser + ";password=" + dbpass + ";create=true\';\" | /db-derby-10.12.1.1-bin/bin/ij"
-                console.log(cmd);
-                child = exec(cmd, function (error, stdout, stderr) {
-                    if (error !== null) {
+                res.render('login', {
+                    ngroup: "true"
+                })
+            }
+        })
+    } else {
+        var cmd = 'echo \"connect \'jdbc:derby://0.0.0.0:1527/' + dbname + ";user=" + dbuser + ";password=" + dbpass + ";create=true\';\" | /db-derby-10.12.1.1-bin/bin/ij"
+        console.log(cmd);
+        child = exec(cmd, function (error, stdout, stderr) {
+            if (error !== null) {
+                var response = {
+                    "error": true,
+                    "output": error.cmd + "\n" + stderr
+                }
+                res.send(response);
+            } else {
+                fs.exists(dbspath + "/" + dbname, function (exists) {
+                    if (exists) {
                         var response = {
-                            "error": true,
-                            "output": error.cmd + "\n" + stderr
+                            "error": false,
+                            "output": "DB was created"
                         }
                         res.send(response);
                     } else {
-
-                        fs.exists(dbspath + "/" + dbname, function (exists) {
-                            if (exists) {
-                                var response = {
-                                    "error": false,
-                                    "output": "DB was created"
-                                }
-                            } else {
-                                var response = {
-                                    "error": true,
-                                    "output": "DB was not created\nYou need restart server first"
-                                }
-                            }
-                        });
+                        var response = {
+                            "error": true,
+                            "output": "DB was not created\nYou need restart server first"
+                        }
+                        res.send(response);
                     }
                 });
             }
-        } else {
-            res.render('login', {
-                ngroup: "true"
-            })
-        }
-    })
+        });
+    }
 })
 
 app.post('/uploaddb', multer({ dest: '/upload/' }).single('upl'), function (req, res) {
@@ -559,10 +588,18 @@ app.post('/uploaddb', multer({ dest: '/upload/' }).single('upl'), function (req,
 app.post('/logoutbutton', function (req, res) {
     if (adauth) {
         checklogin(whitelist, req.cookies._id, function (stat, role) {
-            res.send(true);
+            var permis = {
+                "user": true,
+                "role": role
+            }
+            res.send(permis);
         })
     } else {
-        res.send(false);
+        var permis = {
+            "user": false,
+            "role": "none"
+        }
+        res.send(permis);
     }
 })
 

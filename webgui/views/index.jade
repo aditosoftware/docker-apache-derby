@@ -23,7 +23,7 @@ html
             td= date[i]
             td(name="db"+ i)= db
             td
-              button(class="btn btn-danger",onclick='deleteDb(' + i + ')',name="deleteDb" + i, title="test") delete
+              button(class="btn btn-danger",onclick='deleteDb(' + i + ')',name="deleteDb" + i, title="test", id="deletedb") delete
               |  
               button(class="btn btn-primary",onclick='downloadDb(' + i + ')',name="download" + i) download(.zip)
 if (upload)

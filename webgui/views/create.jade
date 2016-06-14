@@ -14,7 +14,7 @@ html
         div.form-group
           label(for="dbuser") DB password
           input(for="dbuser", class="form-control",type="password",name="dbpass", id="createdbpass")
-          button(class="btn btn-primary btn-lg btn-block", type="submit") Create
+          button(class="btn btn-primary btn-lg btn-block", type="submit", id="createDB") Create
     div.col-lg-12
       h1 Create from backup (.zip)
         h4
@@ -31,7 +31,7 @@ html
         div.form-group
           label(for="upload") File Upload(*.zip)
           input(type="file", name="upl", class="file")
-          button(class="btn btn-primary btn-lg btn-block", type="submit") Upload
+          button(class="btn btn-primary btn-lg btn-block", type="submit", id="uploaddb") Upload
 
 script(type="text/javascript").
   $("#fcreate").submit(function(e){
