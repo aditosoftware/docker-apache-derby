@@ -75,7 +75,7 @@ function checkgroup(user, pass, callback) {
                     } else {
                         //console.log(groups[0].dn.length);
 
-                        for (var i = 0; i < groups.length; i++) {
+                       for (var i = 0; i < groups.length; i++) {
                             var dnSplit = groups[i].dn;
                             var groupSplit = dnSplit.split(",");
                             var groupName = groupSplit[0].replace("CN=", "");
@@ -87,6 +87,14 @@ function checkgroup(user, pass, callback) {
                                     break;
                                 }
                             }
+                        }
+
+                        for (var i = 0; i < groups.length; i++) {
+                            var dnSplit = groups[i].dn;
+                            var groupSplit = dnSplit.split(",");
+                            var groupName = groupSplit[0].replace("CN=", "");
+                            console.log(groupName);
+
                             for (var x = 0; x < loginGroup.length; x++) {
                                 if (groupName == loginGroup[x]) {
                                     return callback("user");
