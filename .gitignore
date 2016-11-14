@@ -1,2 +1,4 @@
 webgui/node_modules
 setVars.bat
+docker-compose.yml
+test.js

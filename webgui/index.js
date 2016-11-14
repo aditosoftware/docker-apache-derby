@@ -29,11 +29,6 @@ if (adauthread == "true" || adauthread == "1") {
     adauth = false;
 }
 
-
-//"icinga2@aditosoftware.local"
-//"I2ci5naga2a2015"
-
-
 var ad = new ActiveDirectory({
     url: 'ldap://aditosoftware.local',
     baseDN: baseDN,
@@ -56,6 +51,7 @@ function checkgroup(user, pass, callback) {
 
     if (adauth) {
         var username = user + "@" + adname;
+        var userForGroup = user;
 
         ad.authenticate(username, pass, function (err, auth) {
             if (err) {
@@ -65,7 +61,7 @@ function checkgroup(user, pass, callback) {
 
             if (auth) {
                 console.log('Authenticated!');
-                ad.getGroupMembershipForUser(username, function (err, groups) {
+                ad.getGroupMembershipForUser(userForGroup, function (err, groups) {
                     if (err) {
                         console.log('ERROR: ' + JSON.stringify(err));
                         return;
